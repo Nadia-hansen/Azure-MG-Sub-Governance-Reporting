@@ -778,7 +778,7 @@ git config --system core.longpaths true
 
 ## Facts
 
-Disabled Azure subscriptions and subscriptions where Quota ID starts with with "AAD\_" are being skipped, all others are queried. More information on Subscription Quota ID / Offer numbers: [Supported Microsoft Azure offers](https://learn.microsoft.com/azure/cost-management-billing/costs/understand-cost-mgt-data#supported-microsoft-azure-offers).
+Disabled Azure subscriptions and subscriptions where Quota ID starts with "AAD\_" are being skipped, all others are queried. More information on Subscription Quota ID / Offer numbers: [Supported Microsoft Azure offers](https://learn.microsoft.com/azure/cost-management-billing/costs/understand-cost-mgt-data#supported-microsoft-azure-offers).
 
 ARM Limits are not acquired programmatically, these are hardcoded. The links used to check related limits are commented in the param section of the script.
 
