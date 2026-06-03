@@ -30996,7 +30996,7 @@ function verifyModules3rd {
                     $azAPICallForkUrl = 'https://github.com/Nadia-hansen/AzAPICall.git'
                     $azAPICallCloneDir = Join-Path ([System.IO.Path]::GetTempPath()) 'AzAPICall-fork'
                     if (Test-Path $azAPICallCloneDir) { Remove-Item -Recurse -Force $azAPICallCloneDir }
-                    git clone --depth 1 $azAPICallForkUrl $azAPICallCloneDir
+                    git clone --depth 1 --quiet $azAPICallForkUrl $azAPICallCloneDir 2>&1 | Write-Host
                     if ($LASTEXITCODE -ne 0) { throw "Failed to clone AzAPICall fork" }
                     $moduleSrc = Join-Path $azAPICallCloneDir 'pwsh/module/build/AzAPICall'
                     $moduleTarget = Join-Path ($env:PSModulePath -split [IO.Path]::PathSeparator | Select-Object -First 1) 'AzAPICall'
