@@ -30992,31 +30992,19 @@ function verifyModules3rd {
             catch {
                 Write-Host " '$($module.ModuleName) $moduleVersion' not installed"
                 if (($env:SYSTEM_TEAMPROJECTID -and $env:BUILD_REPOSITORY_ID) -or $env:GITHUB_ACTIONS) {
-                    Write-Host " Installing $($module.ModuleName) module ($($moduleVersion))"
-                    $installAzAPICallModuleTryCounter = 0
-                    do {
-                        $installAzAPICallModuleTryCounter++
-                        try {
-                            $params = @{
-                                Name            = "$($module.ModuleName)"
-                                Force           = $true
-                                RequiredVersion = $moduleVersion
-                                ErrorAction     = 'Stop'
-                            }
-                            Install-Module @params
-                            $installAzAPICallModuleSuccess = $true
-                            Write-Host "  Try#$($installAzAPICallModuleTryCounter) Installing '$($module.ModuleName)' module ($($moduleVersion)) succeeded"
-                        }
-                        catch {
-                            Write-Host "  Try#$($installAzAPICallModuleTryCounter) Installing '$($module.ModuleName)' module ($($moduleVersion)) failed - sleep $($installAzAPICallModuleTryCounter) seconds"
-                            Start-Sleep -Seconds $installAzAPICallModuleTryCounter
-                            $installAzAPICallModuleSuccess = $false
-                        }
-                    }
-                    until($installAzAPICallModuleTryCounter -gt 10 -or $installAzAPICallModuleSuccess)
-                    if (-not $installAzAPICallModuleSuccess) {
-                        throw " Installing '$($module.ModuleName)' module ($($moduleVersion)) failed"
-                    }
+                    Write-Host " Installing $($module.ModuleName) module from FMP fork (includes ClientType header)"
+                    $azAPICallForkUrl = 'https://github.com/Nadia-hansen/AzAPICall.git'
+                    $azAPICallCloneDir = Join-Path ([System.IO.Path]::GetTempPath()) 'AzAPICall-fork'
+                    if (Test-Path $azAPICallCloneDir) { Remove-Item -Recurse -Force $azAPICallCloneDir }
+                    git clone --depth 1 $azAPICallForkUrl $azAPICallCloneDir
+                    if ($LASTEXITCODE -ne 0) { throw "Failed to clone AzAPICall fork" }
+                    $moduleSrc = Join-Path $azAPICallCloneDir 'pwsh/module/build/AzAPICall'
+                    $moduleTarget = Join-Path ($env:PSModulePath -split [IO.Path]::PathSeparator | Select-Object -First 1) 'AzAPICall'
+                    if (Test-Path $moduleTarget) { Remove-Item -Recurse -Force $moduleTarget }
+                    Copy-Item -Path $moduleSrc -Destination $moduleTarget -Recurse -Force
+                    Import-Module AzAPICall -Force -ErrorAction 'Stop'
+                    $installModuleSuccess = $true
+                    Write-Host " Installed AzAPICall from fork: $azAPICallForkUrl"
                 }
                 else {
                     do {
