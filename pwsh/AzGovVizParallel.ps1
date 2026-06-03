@@ -30991,18 +30991,35 @@ function verifyModules3rd {
             }
             catch {
                 Write-Host " '$($module.ModuleName) $moduleVersion' not installed"
+
                 if (($env:SYSTEM_TEAMPROJECTID -and $env:BUILD_REPOSITORY_ID) -or $env:GITHUB_ACTIONS) {
+                    # Install AzAPICall from FMP fork (includes ClientType header for dedicated Cost Management throttle bucket)
                     Write-Host " Installing $($module.ModuleName) module from FMP fork (includes ClientType header)"
+
                     $azAPICallForkUrl = 'https://github.com/Nadia-hansen/AzAPICall.git'
                     $azAPICallCloneDir = Join-Path ([System.IO.Path]::GetTempPath()) 'AzAPICall-fork'
-                    if (Test-Path $azAPICallCloneDir) { Remove-Item -Recurse -Force $azAPICallCloneDir }
+
+                    if (Test-Path $azAPICallCloneDir) {
+                        Remove-Item -Recurse -Force $azAPICallCloneDir
+                    }
+
+                    # Clone with --quiet to avoid stderr output triggering FailOnStandardError
                     git clone --depth 1 --quiet $azAPICallForkUrl $azAPICallCloneDir 2>&1 | Write-Host
-                    if ($LASTEXITCODE -ne 0) { throw "Failed to clone AzAPICall fork" }
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Failed to clone AzAPICall fork from $azAPICallForkUrl"
+                    }
+
+                    # Copy module to PSModulePath so it's recognized as installed
                     $moduleSrc = Join-Path $azAPICallCloneDir 'pwsh/module/build/AzAPICall'
                     $moduleTarget = Join-Path ($env:PSModulePath -split [IO.Path]::PathSeparator | Select-Object -First 1) 'AzAPICall'
-                    if (Test-Path $moduleTarget) { Remove-Item -Recurse -Force $moduleTarget }
+
+                    if (Test-Path $moduleTarget) {
+                        Remove-Item -Recurse -Force $moduleTarget
+                    }
+
                     Copy-Item -Path $moduleSrc -Destination $moduleTarget -Recurse -Force
                     Import-Module AzAPICall -Force -ErrorAction 'Stop'
+
                     $installModuleSuccess = $true
                     Write-Host " Installed AzAPICall from fork: $azAPICallForkUrl"
                 }
